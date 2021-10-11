@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer"
+        ], function (esriConfig, Map, MapView, FeatureLayer) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+
+            const map = new Map({
+                basemap: 'arcgis-topographic'
+            })
+
+            const view = new MapView({
+                container: 'viewDiv',
+                map: map,
+                center: [-118.80543, 34.02700],
+                zoom: 13
+            })
+
+            // 创建一个 popupTrailheads 并将 content 属性设置为自定义 HTML 字符串，该字符串将显示诸如路径名称和城市管辖范围之类的信息。
+            const popupTrailheads = {
+                title: 'Trailhead',
+                content: `<b>Trail:</b> {TRL_NAME}<br>
+                          <b>City:</b> {CITY_JUR}<br>
+                          <b>Cross Street:</b> {X_STREET}<br>
+                          <b>Parking:</b> {PARKING}<br>
+                          <b>Elevation:</b> {ELEV_FT} ft`
+            }
+            const trailheads = new FeatureLayer({
+                url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trailheads_Styled/FeatureServer/0", // 含有人像标记的图层
+                outFields: ["TRL_NAME", "CITY_JUR", "X_STREET", "PARKING", "ELEV_FT"],
+                popupTemplate: popupTrailheads
+            })
+
+            map.add(trailheads)
+
+            // 创建一个弹出窗口。在内容属性中，将类型设置为(media)媒体，它将显示每条路径的最小和最大海拔的柱状图。
+            const popupTrails = {
+                title: 'Trail Information',
+                content: [{
+                    type: "media",
+                    mediaInfos: [{
+                        type: "column-chart",
+                        caption: '',
+                        value: {
+                            fields: ["ELEV_MIN", "ELEV_MAX"],
+                            normalizeField: null,
+                            tooltipField: '"Min and max elevation values'
+                        }
+                    }]
+                }]
+            }
+
+            const trails = new FeatureLayer({
+                url: 'https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trails_Styled/FeatureServer/0',
+                outFileds: ["TRL_NAME", "ELEV_GAIN"],
+                popupTemplate: popupTrails
+            })
+            map.add(trails, 0)
+
+            // 创建一个弹出窗口。在 content 属性中，将 type 设置为 fields 并定义 fieldInfos 数组。
+            const popupOpenspaces = {
+                "title": "{PARK_NAME}",
+                "content": [{
+                    "type": 'fields',
+                    "fieldInfos": [{
+                            "fieldName": "AGNCY_NAME",
+                            "label": "Agency",
+                            "isEditable": true,
+                            "tooltip": "",
+                            "visible": true,
+                            "format": null,
+                            "stringFieldOption": "text-box"
+                        }, {
+                            "fieldName": "TYPE",
+                            "label": "Type",
+                            "isEditable": true,
+                            "tooltip": "",
+                            "visible": true,
+                            "format": null,
+                            "stringFieldOption": "text-box"
+                        },
+                        {
+                            "fieldName": "ACCESS_TYP",
+                            "label": "Access",
+                            "isEditable": true,
+                            "tooltip": "",
+                            "visible": true,
+                            "format": null,
+                            "stringFieldOption": "text-box"
+                        },
+
+                        {
+                            "fieldName": "GIS_ACRES",
+                            "label": "Acres",
+                            "isEditable": true,
+                            "tooltip": "",
+                            "visible": true,
+                            "format": {
+                                "places": 2,
+                                "digitSeparator": true
+                            },
+                            "stringFieldOption": "text-box"
+                        }
+                    ]
+                }]
+            }
+
+            const openspaces = new FeatureLayer({
+                url: 'https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Parks_and_Open_Space_Styled/FeatureServer/0',
+                outFields: ["TYPE", "PARK_NAME", "AGNCY_NAME", "ACCESS_TYP", "GIS_ACRES", "TRLS_MI", "TOTAL_GOOD", "TOTAL_FAIR", "TOTAL_POOR"],
+                popupTemplate: popupOpenspaces
+            })
+            map.add(openspaces, 0)
+        })
+    </script>
+</body>
+
+</html>

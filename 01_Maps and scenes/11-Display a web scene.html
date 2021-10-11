@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/WebScene",
+            "esri/views/SceneView",
+            "esri/widgets/Legend"
+        ], function (esriConfig, WebScene, SceneView,Legend) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+            
+            // 创建一个 WebScene。使用 portalItem ID 加载 Web 场景
+            const webscene = new WebScene({
+                portalItem: {
+                    id: '579f97b2f3b94d4a8e48a5f140a6639b'
+                }
+            })
+
+            const view = new SceneView({
+                container: "viewDiv",
+                map: webscene
+            })
+            const legend = new Legend({
+                view: view
+            })
+            view.ui.add(legend,"top-right")
+        })
+    </script>
+</body>
+
+</html>

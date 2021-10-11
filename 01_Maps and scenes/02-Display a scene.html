@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/SceneView"
+        ], function (esriConfig, Map, SceneView) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+            
+            const map = new Map({
+                basemap: 'arcgis-topographic',
+                ground: 'world-elevation'
+            })
+
+            const view = new SceneView({
+                container: 'viewDiv',
+                map: map,
+                camera: {
+                    // 定义摄像头位置
+                    position: {
+                        x: -118.808,
+                        y: 33.961,
+                        z: 200
+                    },
+                    tilt: 75 // 倾斜度
+                }
+            })
+            // camera 是确定 SceneView 可见范围的点。
+        })
+    </script>
+</body>
+
+</html>

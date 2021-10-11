@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/layers/VectorTileLayer",
+            "esri/views/MapView"
+        ], function (esriConfig, Map, VectorTileLayer, MapView) {
+
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+            
+            const vtlLayer = new VectorTileLayer({
+                url: "https://vectortileservices3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Santa_Monica_Mountains_Parcels_VTL/VectorTileServer/"
+            })
+
+
+            const map = new Map({
+                basemap: 'arcgis-light-gray',
+                layers: [vtlLayer]
+            })
+
+            const view = new MapView({
+                container: 'viewDiv',
+                center: [-118.80543,34.02700],
+                zoom: 13,
+                map: map
+            })
+        })
+    </script>
+</body>
+
+</html>
