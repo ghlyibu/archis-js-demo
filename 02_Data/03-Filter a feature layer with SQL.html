@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .esri-ui-corner .esri-component.esri-widget--panel {
+            width: 200px !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+        ], function (esriConfig, Map, MapView, FeatureLayer) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+
+            const map = new Map({
+                basemap: 'arcgis-topographic'
+            })
+
+            const view = new MapView({
+                container: 'viewDiv',
+                map: map,
+                center: [-118.80543, 34.02700],
+                zoom: 13
+            })
+
+            const sqlExpressions = [
+                "Choose a SQL where clause...",
+                "Roll_LandValue < 200000",
+                "TaxRateArea = 10853", "Bedrooms5 > 0",
+                "UseType = 'Residential'",
+                "Roll_RealEstateExemp > 0"
+            ]
+            
+            const selectFilter = document.createElement("select");
+            selectFilter.setAttribute("class", "esri-widget esri-select");
+            selectFilter.setAttribute("style", "width: 275px; font-family: Avenir Next W00; font-size: 1em;");
+
+            sqlExpressions.forEach(function (sql) {
+                let option = document.createElement("option");
+                option.value = sql;
+                option.innerHTML = sql;
+                selectFilter.appendChild(option);
+            });
+
+            view.ui.add(selectFilter, "top-right");
+
+            const featureLayer = new FeatureLayer({
+                url: 'https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/LA_County_Parcels/FeatureServer/0',
+                outFields: ['*'],
+                popupTemplate: {
+                    title: "{UseType}",
+                    content: `Description: {UseDescription}. Land value: {Roll_LandValue}`
+                },
+                definitionExpression: '1=0'
+            })
+            map.add(featureLayer)
+
+            function setFeatureLayerFilter(expression) {
+                featureLayer.definitionExpression = expression
+            }
+
+            selectFilter.addEventListener('change', event => {
+                setFeatureLayerFilter(event.target.value)
+            })
+        })
+    </script>
+</body>
+
+</html>
