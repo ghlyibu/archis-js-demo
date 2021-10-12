@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逆地理编码</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .esri-ui-corner .esri-component.esri-widget--panel {
+            width: 200px !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/rest/locator",
+            "esri/Graphic"
+        ], function (esriConfig, Map, MapView, locator, Graphic) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+
+            const map = new Map({
+                basemap: 'arcgis-navigation'
+            })
+
+            const view = new MapView({
+                container: 'viewDiv',
+                map: map,
+                center: [-78.50169,-0.21489],
+                zoom: 12
+            })
+
+            const serviceUrl = "http://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer";
+
+            view.on('click', function(evt) {
+                const params = {
+                    location: evt.mapPoint
+                }
+                locator.locationToAddress(serviceUrl,params).then(function(response){
+                    const address = response.address
+                    showAddress(address,evt.mapPoint)
+                }).catch(error => {
+                    showAddress("No address found.", evt.mapPoint)
+                })
+            })
+
+            function showAddress(address,pt) {
+                view.popup.open({
+                    title: + Math.round(pt.longitude * 100000)/100000 + ',' + Math.round(pt.latitude * 100000)/100000,
+                    content: address,
+                    location: pt
+                })
+            }
+        })
+    </script>
+</body>
+
+</html>

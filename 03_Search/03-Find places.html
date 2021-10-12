@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .esri-ui-corner .esri-component.esri-widget--panel {
+            width: 200px !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/rest/locator",
+            "esri/Graphic"
+        ], function (esriConfig, Map, MapView, locator, Graphic) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+
+            const map = new Map({
+                basemap: 'arcgis-navigation'
+            })
+
+            const view = new MapView({
+                container: 'viewDiv',
+                map: map,
+                center: [18.9553, 69.6492],
+                zoom: 12
+            })
+
+            const places = ["Choose a place type...", "Parks and Outdoors", "Coffee shop", "Gas station", "Food", "Hotel"];
+
+            const select = document.createElement("select", "")
+            select.setAttribute("class", "esri-widgets esri-select")
+            select.setAttribute("style", "width: 175px; font-family: 'Avenir Next W00';font-size: 1em;")
+            places.forEach(function (p) {
+                const option = document.createElement('option')
+                option.value = p
+                option.innerHTML = p
+                select.appendChild(option)
+            })
+            view.ui.add(select, "top-right")
+
+            const locatorUrl = "http://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer"
+
+            function findPlace(category, pt) {
+                locator.addressToLocations(locatorUrl, {
+                    location: pt,
+                    categories: [category],
+                    maxLocations: [category],
+                    maxLocations: 25,
+                    outFields: ["Place_addr", "PlaceName"]
+                }).then(results => {
+                    view.popup.close()
+                    view.graphics.removeAll()
+
+                    results.forEach(result => {
+                        view.graphics.add(new Graphic({
+                            attributes: result.attributes,
+                            geometry: result.location,
+                            symbol: {
+                                type: "simple-marker",
+                                color: "#000000",
+                                size: "12px",
+                                outline: {
+                                    color: "#ffffff",
+                                    width: "2px"
+                                }
+                            },
+                            popupTemplate: {
+                                title: "{PlaceName}",
+                                content: "{Place_addr}"
+                            }
+                        }))
+                    })
+                })
+            }
+
+            view.watch("stationary", function (val) {
+                if (val) {
+                    findPlace(select.valuem, view.center)
+                }
+            })
+            select.addEventListener('change', function(event) {
+                findPlace(event.target.value, view.center)
+            })
+        })
+    </script>
+</body>
+
+</html>

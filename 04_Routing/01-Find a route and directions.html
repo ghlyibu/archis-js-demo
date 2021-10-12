@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查找路线和方向</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .esri-ui-corner .esri-component.esri-widget--panel {
+            width: 200px !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/rest/route",
+            "esri/rest/support/RouteParameters",
+            "esri/rest/support/FeatureSet"
+        ], function (esriConfig, Map, MapView, Graphic, route, RouteParameters, FeatureSet) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+
+            const map = new Map({
+                basemap: 'arcgis-topographic'
+            })
+
+            const view = new MapView({
+                container: 'viewDiv',
+                map: map,
+                center: [-118.80543, 34.02700],
+                zoom: 12
+            })
+            const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
+
+            view.on('click', event => {
+                if (view.graphics.length === 0) {
+                    // 加入开始点位图标
+                    addGraphic("origin", event.mapPoint)
+                } else if (view.graphics.length === 1) {
+                    // 加入结束点位图标
+                    addGraphic("destination", event.mapPoint)
+                    // 获取路线
+                    getRoute()
+                } else {
+                    view.graphics.removeAll()
+                    addGraphic("origin", event.mapPoint)
+                }
+            })
+
+            function addGraphic(type, point) {
+                const graphic = new Graphic({
+                    symbol: {
+                        type: "simple-marker",
+                        color: (type === 'origin') ? 'white' : 'black',
+                        size: '8px'
+                    },
+                    geometry: point
+                })
+                view.graphics.add(graphic)
+            }
+
+            function getRoute() {
+                const routeParams = new RouteParameters({
+                    stops: new FeatureSet({
+                        features: view.graphics.toArray()
+                    }),
+                    returnDirections: true
+                })
+                route.solve(routeUrl, routeParams).then(data => {
+                    data.routeResults.forEach(result => {
+                        result.route.symbol = {
+                            type: 'simple-line',
+                            color: [5, 150, 255],
+                            width: 3
+                        }
+                        view.graphics.add(result.route)
+                    })
+
+                    // 显示方向
+                    if (data.routeResults.length > 0) {
+                        const directions = document.createElement('ol')
+                        directions.classList = "esri-widget esri-widget--panel esri-directions__scroller",
+                        directions.style.marginTop = "0"
+                        directions.style.padding = "15px 15px 15px 30px"
+                        const features = data.routeResults[0].directions.features
+
+                        // 显示每个方向
+                        features.forEach((result,i)=>{
+                            const direction = document.createElement('li')
+                            direction.innerHTML = `${result.attributes.text}(${result.attributes.length.toFixed(2)} miles)`
+                            directions.appendChild(direction)
+                        })
+                        view.ui.empty("top-right")
+                        view.ui.add(directions,"top-right")
+                    }
+                }).catch(error=>{
+                    console.log(error)
+                })
+
+            }
+        })
+    </script>
+</body>
+
+</html>

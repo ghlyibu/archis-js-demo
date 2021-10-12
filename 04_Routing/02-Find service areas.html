@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查找服务区域</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .esri-ui-corner .esri-component.esri-widget--panel {
+            width: 200px !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/rest/serviceArea",
+            "esri/rest/support/ServiceAreaParameters",
+            "esri/rest/support/FeatureSet",
+            "esri/Graphic"
+        ], function (esriConfig, Map, MapView, serviceArea, ServiceAreaParameters, FeatureSet, Graphic) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+
+            const map = new Map({
+                basemap: 'arcgis-topographic'
+            })
+
+            const view = new MapView({
+                container: 'viewDiv',
+                map: map,
+                center: [135.5023,34.6937],
+                zoom: 12
+            })
+             const serviceAreaUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/ServiceAreas/NAServer/ServiceArea_World/solveServiceArea";
+            view.on('click', event => {
+                const locationFraphic = createGraphic(event.mapPoint)
+                const driveTimeCutoffs = [5,10,15] // 分钟
+                const serviceAreaParams = createServiceAreaParams(locationFraphic,driveTimeCutoffs,view.spatialReference)
+                solveServiceArea(serviceAreaUrl,serviceAreaParams)
+            })
+
+            function createGraphic(point) {
+                view.graphics.removeAll()
+                const graphic = new Graphic({
+                    geometry: point,
+                    symbol: {
+                        type: "simple-marker",
+                        color: 'white',
+                        size: '8px'
+                    },
+                    geometry: point
+                })
+                view.graphics.add(graphic)
+                return graphic
+            }
+
+            function createServiceAreaParams(locationGraphic, driveTimeCutoffs, outSpatialReference) {
+
+                // 创建一个 FeatureSet 以使用点图形设置要素属性。
+                const featureSet = new FeatureSet({
+                    features: [locationGraphic]
+                })
+
+                // 设置服务的所有输入参数
+                const taskParameters = new ServiceAreaParameters({
+                    facilities: featureSet,
+                    defaultBreaks: driveTimeCutoffs,
+                    trimOuterPolygon: true,
+                    outSpatialReference: outSpatialReference
+                })
+                return taskParameters
+            }
+
+            function solveServiceArea(url, serviceAreaParams) {
+                return serviceArea.solve(url, serviceAreaParams).then(result => {
+                    if(result.serviceAreaPolygons.length){
+                        result.serviceAreaPolygons.forEach(graphic => {
+                            graphic.symbol = {
+                                type: "simple-fill",
+                                color: "rgba(255,50,50,.25)"
+                            }
+                            view.graphics.add(graphic, 0)
+                        })
+                    }
+                }).catch(err=>{
+                    console.log(err)
+                })
+            }
+
+        })
+    </script>
+</body>
+
+</html>
