@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>查找路线和方向</title>
+    <title>查找空间关系</title>
     <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
     <script src="https://js.arcgis.com/4.21/"></script>
     <style>
@@ -81,9 +81,10 @@
                     [-13221470.404932415, 4033494.9524006792]
                 ],
                 spatialReference: {
-                    wikid: 102100
+                    wkid: 102100
                 }
             }
+
             const simpleLineSymbol = {
                 type: 'simple-line',
                 width: 2
@@ -139,20 +140,25 @@
                     settingsMenu: false,
                     undoRedoMenu: false
                 }
-            })
+            });
             view.ui.add(sketch, "top-right");
-            sketch.on(["update", "undo", "redo"], onGraphicUpdate)
 
-            sketch.on("create", (event) => {
+            sketch.on(["update", "undo", "redo"], onGraphicUpdate);
+
+
+             sketch.on("create", (event) => {
                 if (event.state === "start") {
-                    const arrVal = selectedGraphics.pop()
-                    graphicsLayer.remove(arrVal)
+                    const arrVal = selectedGraphics.pop();
+                    graphicsLayer.remove(arrVal);
                 }
                 if (event.state === "complete") {
-                    selectedGraphics.unshift(event.graphic)
-                    onGraphicUpdate()
+                    selectedGraphics.unshift(event.graphic);
+                    onGraphicUpdate();
                 }
             })
+            view.when(() => {
+                sketch.update(polylineGraphic).then(onGraphicUpdate)
+            });
 
             function onGraphicUpdate() {
                 let geometry1 = selectedGraphics[0].geometry
@@ -183,9 +189,7 @@
                 showSpatialRelationship("Within", within)
             }
 
-            view.when(() => {
-                sketch.update(polylineGraphic).then(onGraphicUpdate)
-            });
+
 
             function showSpatialRelationship(string, value) {
                 const element = document.getElementById(string)

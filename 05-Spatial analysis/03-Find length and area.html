@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查找长度和面积</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .esri-ui-corner .esri-component.esri-widget--panel {
+            width: 200px !important;
+        }
+
+        #relationshipResults {
+            width: 175px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <div id="relationshipResults" class="esri-widget">
+        <div><b>Spatial relationships</b></div>
+        <div id="Contains"></div>
+        <div id="Crosses"></div>
+        <div id="Disjoint"></div>
+        <div id="Equals"></div>
+        <div id="Intersects"></div>
+        <div id="Overlaps"></div>
+        <div id="Touches"></div>
+        <div id="Within"></div>
+    </div>
+
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/layers/GraphicsLayer",
+            "esri/widgets/Sketch",
+            "esri/geometry/geometryEngine"
+        ], function (esriConfig, Map, MapView, Graphic, GraphicsLayer, Sketch, geometryEngine) {
+
+        })
+    </script>
+</body>
+
+</html>
+

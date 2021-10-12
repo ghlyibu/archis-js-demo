@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算几何图形</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .esri-ui-corner .esri-component.esri-widget--panel {
+            width: 200px !important;
+        }
+
+        #relationshipResults {
+            width: 175px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+     <div id="controls" class="esri-widget">
+      <button id="buffer" class="esri-button">Buffer</button>
+      <button id="intersect" class="esri-button">Intersect</button>
+      <button id="union" class="esri-button">Union</button>
+      <button id="reset" class="esri-button esri-button--secondary">Reset</button>
+    </div>
+
+    <script>
+         require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/layers/GraphicsLayer",
+            "esri/geometry/geometryEngine"
+          ], function(esriConfig, Map, MapView, Graphic, GraphicsLayer, geometryEngine) {
+
+        })
+    </script>
+</body>
+
+</html>
