@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查找路线和方向</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .esri-ui-corner .esri-component.esri-widget--panel {
+            width: 200px !important;
+        }
+
+        #relationshipResults {
+            width: 175px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <div id="relationshipResults" class="esri-widget">
+        <div><b>Spatial relationships</b></div>
+        <div id="Contains"></div>
+        <div id="Crosses"></div>
+        <div id="Disjoint"></div>
+        <div id="Equals"></div>
+        <div id="Intersects"></div>
+        <div id="Overlaps"></div>
+        <div id="Touches"></div>
+        <div id="Within"></div>
+    </div>
+
+    <script>
+        require([
+            "esri/config",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/layers/GraphicsLayer",
+            "esri/widgets/Sketch",
+            "esri/geometry/geometryEngine"
+        ], function (esriConfig, Map, MapView, Graphic, GraphicsLayer, Sketch, geometryEngine) {
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+
+            const map = new Map({
+                basemap: 'arcgis-topographic'
+            })
+
+            const view = new MapView({
+                container: 'viewDiv',
+                map: map,
+                center: [-118.80543, 34.02700],
+                zoom: 12
+            })
+            const relationshipDiv = document.getElementById("relationshipResults")
+            view.ui.add(relationshipDiv, "bottom-right")
+
+            const graphicsLayer = new GraphicsLayer()
+            map.add(graphicsLayer)
+
+            const polyline = {
+                type: "polyline",
+                paths: [
+                    [-13227000.704542402, 4032506.197638312],
+                    [-13223540.698857695, 4034443.92109266],
+                    [-13222135.94452635, 4032506.197638312],
+                    [-13221470.479577951, 4033494.9524006792],
+                    [-13221470.404932415, 4033494.9524006792]
+                ],
+                spatialReference: {
+                    wikid: 102100
+                }
+            }
+            const simpleLineSymbol = {
+                type: 'simple-line',
+                width: 2
+            }
+            const polylineGraphic = new Graphic({
+                geometry: polyline,
+                symbol: simpleLineSymbol
+            })
+            graphicsLayer.add(polylineGraphic)
+            // Create a polygon geometry
+            const polygon = {
+                type: "polygon",
+                rings: [
+                    [-13228098.704542402, 4035365.9427463487],
+                    [-13226362.225451587, 4035365.9427463487],
+                    [-13226362.225451587, 4032059.2948176656],
+                    [-13228098.704542402, 4032059.2948176656],
+                    [-13228098.704542402, 4035365.9427463487]
+                ],
+                spatialReference: {
+                    wkid: 102100
+                }
+            };
+            const simpleFillSymbol = {
+                type: "simple-fill"
+            };
+            const polygonGraphic = new Graphic({
+                geometry: polygon,
+                symbol: simpleFillSymbol
+            });
+
+            graphicsLayer.add(polygonGraphic);
+            let selectedGraphics = [polygonGraphic, polylineGraphic];
+
+            const sketch = new Sketch({
+                view: view,
+                layer: graphicsLayer,
+                updateOnGraphicClick: true,
+                snappingOptions: {
+                    enabled: true,
+                    featureSources: [{
+                        layer: graphicsLayer
+                    }]
+                },
+                visibleElements: {
+                    createTools: {
+                        point: false
+                    },
+                    selectionTools: {
+                        "lasso-selection": false,
+                        "rectangle-selection": false,
+                    },
+                    settingsMenu: false,
+                    undoRedoMenu: false
+                }
+            })
+            view.ui.add(sketch, "top-right");
+            sketch.on(["update", "undo", "redo"], onGraphicUpdate)
+
+            sketch.on("create", (event) => {
+                if (event.state === "start") {
+                    const arrVal = selectedGraphics.pop()
+                    graphicsLayer.remove(arrVal)
+                }
+                if (event.state === "complete") {
+                    selectedGraphics.unshift(event.graphic)
+                    onGraphicUpdate()
+                }
+            })
+
+            function onGraphicUpdate() {
+                let geometry1 = selectedGraphics[0].geometry
+                let geometry2 = selectedGraphics[1].geometry
+
+                const contains = geometryEngine.contains(geometry1, geometry2);
+                showSpatialRelationship("Contains", contains)
+
+                const crosses = geometryEngine.crosses(geometry1, geometry2);
+                showSpatialRelationship("Crosses", crosses)
+
+                const disjoint = geometryEngine.disjoint(geometry1, geometry2);
+                showSpatialRelationship("Disjoint", disjoint)
+
+                const equals = geometryEngine.equals(geometry1, geometry2);
+                showSpatialRelationship("Equals", equals)
+
+                const intersects = geometryEngine.intersects(geometry1, geometry2);
+                showSpatialRelationship("Intersects", intersects)
+
+                const overlaps = geometryEngine.overlaps(geometry1, geometry2);
+                showSpatialRelationship("Overlaps", overlaps)
+
+                const touches = geometryEngine.touches(geometry1, geometry2);
+                showSpatialRelationship("Touches", touches)
+
+                const within = geometryEngine.within(geometry1, geometry2);
+                showSpatialRelationship("Within", within)
+            }
+
+            view.when(() => {
+                sketch.update(polylineGraphic).then(onGraphicUpdate)
+            });
+
+            function showSpatialRelationship(string, value) {
+                const element = document.getElementById(string)
+                if (value) {
+                    element.innerHTML = "<b>" + string + ": " + value + "</b>";
+                } else {
+                    element.innerHTML = string + ": " + value;
+                }
+            }
+
+        })
+    </script>
+</body>
+
+</html>
