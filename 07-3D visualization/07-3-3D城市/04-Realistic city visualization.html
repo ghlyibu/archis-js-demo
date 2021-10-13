@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>将建筑物可视化为 3D 对象</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .buttons {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+
+        }
+
+        .esri-button {
+            display: inline;
+            background-color: white;
+            min-width: 200px;
+            max-width: 300px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <div class="buttons">
+        <button id="building" class="esri-button esri-button--secondary esri-button--half">Untextured 3D buildings</button>
+        <button id="textured" class="esri-button esri-button--secondary esri-button--half">Textured 3D buildings</button>
+    </div>
+</body>
+
+<script>
+    require([
+        "esri/config",
+        "esri/Map",
+        "esri/views/SceneView",
+        "esri/layers/IntegratedMeshLayer",
+        "esri/widgets/LayerList",
+        "esri/layers/SceneLayer",
+        "esri/widgets/Legend"
+    ], function (esriConfig, Map, SceneView, IntegratedMeshLayer, LayerList, SceneLayer, Legend) {
+        esriConfig.apiKey = "AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn";
+        const map = new Map({
+            basemap: "arcgis-imagery",
+            ground: "world-elevation"
+        })
+        const meshLayer = new IntegratedMeshLayer({
+            url: "https://tiles.arcgis.com/tiles/u0sSNqDXr7puKJrF/arcgis/rest/services/Frankfurt2017_v17/SceneServer/layers/0",
+            copyright: "nFrames - Aerowest",
+            title: "Integrated Mesh Frankfurt"
+        })
+
+        const color = [235, 171, 52]
+        const poiLayer = new SceneLayer({
+            url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Frankfurt_POIs/SceneServer",
+            title: "Points of interest",
+            renderer: {
+                type: "simple",
+                symbol: {
+                    type: "point-3d",
+                    symbolLayers: [{
+                        type: "icon",
+                        resource: {
+                            primitive: "circle"
+                        },
+                        material: {
+                            color: color
+                        },
+                        outline: {
+                            color: "white",
+                            size: 1
+                        }
+                    }],
+                    vericalOffset: {
+                        screenLength: 40,
+                        maxWorldLength: 200,
+                        minWorldLength: 35
+                    },
+                    callout: {
+                        type: "line",
+                        color: color,
+                        size: 1,
+                        border: {
+                            color: "white"
+                        }
+                    }
+                },
+                elevationInfo: {
+                    mode: "relative-to-scene"
+                },
+                sceenSizePerspectiveEnabled: false,
+                labelingInfo: [{
+                    labelExpressionInfo: {
+                        value: "{name}"
+                    },
+                    symbol: {
+                        type: "label-3d",
+                        symbolLayers: [{
+                            type: "text",
+                            material: {
+                                color: color
+                            },
+                            // we set a halo on the font to make the labels more visible with any kind of background
+                            halo: {
+                                size: 1,
+                                color: "white"
+                            },
+                            size: 10
+                        }]
+                    }
+                }]
+            }
+        })
+
+        map.addMany([meshLayer, poiLayer]);
+
+        const view = new SceneView({
+            container: "viewDiv",
+            map: map,
+            qualityProfile: "high",
+            camera: {
+                position: [
+                    8.69370363,
+                    50.10533415,
+                    284.73511
+                ],
+                heading: 295.75,
+                tilt: 76.80
+            }
+        });
+
+        const layerList = new LayerList({
+            view: view
+        });
+        view.ui.add(layerList, "top-right");
+    });
+</script>
+
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地形渲染</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: aliceblue;
+        }
+
+        .esri-legend {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+                "esri/config",
+                "esri/Map",
+                "esri/layers/FeatureLayer",
+                "esri/views/SceneView",
+                "esri/layers/ElevationLayer",
+                "esri/layers/support/LabelClass",
+                "esri/Basemap",
+                "esri/layers/TileLayer"
+            ],
+            function (esriConfig, Map, FeatureLayer, SceneView, ElevationLayer, LabelClass, Basemap, TileLayer) {
+                esriConfig.apiKey = "AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn";
+
+                const basemap = new Basemap({
+                    baseLayers: [
+                        new TileLayer({
+                            url: "https://wtb.maptiles.arcgis.com/arcgis/rest/services/World_Topo_Base/MapServer"
+                        })
+                    ]
+                })
+
+                const map = new Map({
+                    ground: {
+                        layers: [
+                            new ElevationLayer({
+                                url: "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+                            })
+                        ]
+                    },
+                    basemap: basemap
+                })
+
+                const view = new SceneView({
+                    container: "viewDiv",
+                    map: map,
+                    qualityProfile: "high",
+                    camera: {
+                        position: [
+                            -118.80714018,
+                            33.96144206,
+                            1574.65501
+                        ],
+                        heading: 0.51,
+                        tilt: 78.99
+                    }
+                })
+
+                const trails = new FeatureLayer({
+                    url: 'https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trails/FeatureServer/0',
+                    elevationInfo: {
+                        mode: "relative-to-ground",
+                        offset: 3
+                    },
+                    renderer: {
+                        type: "simple",
+                        symbol: {
+                            type: "line-3d",
+                            symbolLayers: [{
+                                type: "line",
+                                material: {
+                                    color: "#FF5500"
+                                },
+                                size: "2px"
+                            }]
+                        }
+                    }
+                })
+
+
+                const trailHeads = new FeatureLayer({
+                    url: 'https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trailheads/FeatureServer/0',
+                    elevationInfo: {
+                        mode: 'relative-to-ground'
+                    },
+                    renderer: {
+                        type: "simple",
+                        symbol: {
+                            type: "point-3d",
+                            symbolLayers: [{
+                                type: "icon",
+                                resource: {
+                                    primitive: "circle"
+                                },
+                                material: {
+                                    color: "#FF5500"
+                                },
+                                outline: {
+                                    color: "#FFFFFF",
+                                    size: 1
+                                },
+                                size: '10px'
+                            }],
+                            // 垂直偏移
+                            verticalOffset: {
+                                screenLength: 20,
+                                maxWorldLength: 200,
+                                minWorldLength: 20
+                            },
+                            callout: {
+                                type: "line",
+                                size: 1,
+                                color: "#FFFFFF"
+                            }
+                        }
+                    },
+                    labelingInfo: [
+                        new LabelClass({
+                            labelExpressionInfo: {
+                                expression: "$feature.TRL_NAME"
+                            },
+                            symbol: {
+                                type: "label-3d",
+                                symbolLayers: [{
+                                    type: "text",
+                                    material: {
+                                        color: "#ffffff"
+                                    },
+                                    halo: {
+                                        size: 1,
+                                        color: [0, 0, 0, 0.5]
+                                    },
+                                    font: {
+                                        size: 11,
+                                        family: "sans-serif"
+                                    }
+                                }]
+                            }
+                        })
+                    ]
+                })
+                map.addMany([trails, trailHeads]);
+
+            });
+    </script>
+</body>
+
+</html>

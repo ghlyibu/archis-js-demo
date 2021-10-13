@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地球仪和局部场景</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="view1Div" style="float: left; width: 50%; height: 100%"></div>
+    <div id="view2Div" style="float: left; width: 50%; height: 100%"></div>
+    <script>
+        require([
+                "esri/config", "esri/Map", "esri/views/SceneView", "esri/layers/FeatureLayer", "esri/layers/support/LabelClass"
+            ],
+            function (esriConfig, Map, SceneView, FeatureLayer, LabelClass) {
+                esriConfig.apiKey = "AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn";
+                const map = new Map({
+                    basemap: "arcgis-light-gray",
+                    ground: "world-elevation"
+                });
+
+                // 局部
+                const view = new SceneView({
+                    container: "view2Div",
+                    map: map,
+                    camera: {
+                        position: [
+                            -41.18215285,
+                            -86.13467977,
+                            9321113.29449
+                        ],
+                        heading: 359.73,
+                        tilt: 68.57
+                    },
+                    viewingMode: 'local',
+                    qualityPofile: "high"
+                });
+
+                // 地球仪
+                const globeView = new SceneView({
+                    container: 'view1Div',
+                    map: map,
+                    viewingMode: "global",
+                    qualityPofile: 'high',
+                    environment: {
+                        background: {
+                            type: "color",
+                            color: [255, 255, 255, 1]
+                        },
+                        startsEnabled: false,
+                        atmosphereEnabled: false
+                    }
+                })
+
+                const populationLayer = new FeatureLayer({
+                    url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Cities_analysis/FeatureServer',
+                    definitionExpression: "POP > 10000000",
+                    elevationInfo: {
+                        mode: "on-the-ground"
+                    },
+                    renderer: {
+                        type: "simple",
+                        symbol: {
+                            type: 'point-3d',
+                            symbolLayers: [
+                            { // 圆柱
+                                type: "object",
+                                resource: {
+                                    primitive: "cylinder"
+                                },
+                                material: {
+                                    color: '#4c397f'
+                                },
+                                depth: 50000,
+                                height: 1000000,
+                                width: 50000,
+                                anchor: "bottom"
+                            }, {
+                            // 圆
+                                type: 'icon',
+                                resource: {
+                                    primitive: "circle"
+                                },
+                                material: {
+                                    color: [76, 57, 127, 0.1]
+                                },
+                                outline: {
+                                    color: [76, 57, 127, 0.8]
+                                },
+                                size: 15
+                            }],
+                        }
+                    },
+                    labelingInfo: [
+                        // 文本
+                        new LabelClass({
+                            labelExpressionInfo: {
+                                expression: "$feature.CITY_NAME"
+                            },
+                            symbol: {
+                                type: "label-3d",
+                                symbolLayers: [{
+                                    type: "text", // autocasts as new TextSymbol3DLayer()
+                                    material: {
+                                        color: "#4c397f"
+                                    },
+                                    size: 10,
+                                    font: {
+                                        family: "Open Sans",
+                                        weight: "bold"
+                                    },
+                                    halo: {
+                                        color: "white",
+                                        size: 1
+                                    }
+                                }]
+                            }
+                        })
+                    ]
+                })
+                map.add(populationLayer)
+            });
+    </script>
+</body>
+
+</html>

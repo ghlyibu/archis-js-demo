@@ -16,38 +16,198 @@
             margin: 0;
             height: 100%;
             width: 100%;
+            font-family: "Avenir Next";
         }
 
-        .esri-ui-corner .esri-component.esri-widget--panel {
-            width: 200px !important;
+        #controls {
+            width: 250px;
+            padding: 0px 5px 0px 5px;
         }
 
-        #relationshipResults {
-            width: 175px;
-            padding: 10px;
+        .esri-button {
+            margin: 5px 0px 5px 0px;
         }
     </style>
 </head>
 
 <body>
     <div id="viewDiv"></div>
-     <div id="controls" class="esri-widget">
-      <button id="buffer" class="esri-button">Buffer</button>
-      <button id="intersect" class="esri-button">Intersect</button>
-      <button id="union" class="esri-button">Union</button>
-      <button id="reset" class="esri-button esri-button--secondary">Reset</button>
+    <div id="controls" class="esri-widget">
+        <button id="buffer" class="esri-button">Buffer</button>
+        <button id="intersect" class="esri-button">Intersect</button>
+        <button id="union" class="esri-button">Union</button>
+        <button id="reset" class="esri-button esri-button--secondary">Reset</button>
     </div>
 
     <script>
-         require([
+        require([
             "esri/config",
             "esri/Map",
             "esri/views/MapView",
             "esri/Graphic",
             "esri/layers/GraphicsLayer",
             "esri/geometry/geometryEngine"
-          ], function(esriConfig, Map, MapView, Graphic, GraphicsLayer, geometryEngine) {
+        ], function (esriConfig, Map, MapView, Graphic, GraphicsLayer, geometryEngine) {
 
+            esriConfig.apiKey = 'AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn'
+
+            const map = new Map({
+                basemap: 'arcgis-topographic'
+            })
+            const view = new MapView({
+                map: map,
+                center: [-118.80500, 34.0075],
+                zoom: 13,
+                container: "viewDiv"
+            })
+            const graphicsLayer = new GraphicsLayer()
+            const resultsLayer = new GraphicsLayer()
+            map.addMany([graphicsLayer, resultsLayer])
+
+            const point = {
+                type: 'point',
+                longitude: -118.80657463861,
+                latitude: 34.0005930608889,
+            }
+            const simpleMarkerSymbol = {
+                type: "simple-marker",
+                color: [226, 119, 40],
+                size: 12,
+                style: "circle",
+                outline: {
+                    width: 1,
+                    color: [255, 255, 255]
+                }
+            }
+            const pointGraphic = new Graphic({
+                geometry: point,
+                symbol: simpleMarkerSymbol
+            })
+            graphicsLayer.add(pointGraphic)
+
+            const polyline = {
+                type: "polyline",
+                paths: [
+                    [-118.821527826096, 34.0139576938577], //Longitude, latitude
+                    [-118.814893761649, 34.0080602407843], //Longitude, latitude
+                    [-118.808878330345, 34.0016642996246] //Longitude, latitude
+                ]
+            }
+            const simpleLineSymbol = {
+                type: "simple-line",
+                width: 1,
+                color: [255, 255, 255, 1],
+                style: "solid",
+                cap: "round",
+                join: "round"
+            }
+
+            const polylineGraphic = new Graphic({
+                geometry: polyline,
+                symbol: simpleLineSymbol
+            })
+            graphicsLayer.add(polylineGraphic)
+
+            const polyon = {
+                type: 'polygon',
+                rings: [
+                    [-118.818984489994, 34.0137559967283], //Longitude, latitude
+                    [-118.806796597377, 34.0215816298725], //Longitude, latitude
+                    [-118.791432890735, 34.0163883241613], //Longitude, latitude
+                    [-118.79596686535, 34.008564864635], //Longitude, latitude
+                    [-118.808558110679, 34.0035027131376] //Longitude, latitude
+                ]
+            }
+            const simpleFillSymbol = {
+                type: "simple-fill",
+                color: [227, 139, 79, 0.8],
+                outline: {
+                    color: [255, 255, 255],
+                    width: 1
+                }
+            }
+            const polygonGraphic = new Graphic({
+                geometry: polyon,
+                symbol: simpleFillSymbol
+            })
+            graphicsLayer.add(polygonGraphic)
+
+            view.ui.add(document.getElementById("controls", "top-right"))
+            document.getElementById("buffer").addEventListener('click', createBuffer)
+            document.getElementById("reset").addEventListener('click', resetGraphics)
+            document.getElementById("intersect").addEventListener('click', findInterSect)
+            document.getElementById("union").addEventListener("click", createUnion);
+            let bufferGraphic;
+
+            function createBuffer() {
+                if (bufferGraphic) {
+                    return
+                }
+                const buffer = geometryEngine.geodesicBuffer(pointGraphic.geometry, 1, "kilometers")
+                bufferGraphic = new Graphic({
+                    geometry: buffer,
+                    symbol: {
+                        type: "simple-fill",
+                        color: [227, 139, 79, 0.5],
+                        outline: {
+                            width: 1,
+                            color: [255, 255, 255, 1]
+                        }
+                    }
+                })
+                graphicsLayer.add(bufferGraphic)
+            }
+
+            function resetGraphics() {
+                graphicsLayer.remove(bufferGraphic)
+                resultsLayer.removeAll()
+                bufferGraphic = null
+            }
+
+            function findInterSect() {
+                resultsLayer.removeAll()
+                if (!bufferGraphic) {
+                    reutrn
+                }
+                const intersectGeom = geometryEngine.intersect(polygonGraphic.geometry, bufferGraphic.geometry);
+
+                const intersectionGraphic = new Graphic({
+                    geometry: intersectGeom,
+                    symbol: {
+                        type: "simple-fill",
+                        color: "green",
+                        style: "cross",
+                        outline: {
+                            color: "green"
+                        }
+                    }
+                })
+                resultsLayer.add(intersectionGraphic)
+            }
+
+            function createUnion() {
+
+                resultsLayer.removeAll();
+                if (!bufferGraphic) {
+                    return;
+                }
+
+                const unionGeom = geometryEngine.union(polygonGraphic.geometry, bufferGraphic.geometry);
+
+                const unionGraphic = new Graphic({
+                    geometry: unionGeom,
+                    symbol: {
+                        type: "simple-fill",
+                        style: "cross",
+                        color: "green",
+                        outline: {
+                            color: "green"
+                        }
+                    }
+                });
+                resultsLayer.add(unionGraphic);
+
+            }
         })
     </script>
 </body>

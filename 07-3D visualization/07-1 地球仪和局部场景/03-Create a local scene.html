@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>此示例在裁剪的本地场景中显示地震。</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: aliceblue;
+        }
+
+        .esri-legend {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <script>
+        require([
+                "esri/config",
+                "esri/Map",
+                "esri/views/SceneView",
+                "esri/layers/FeatureLayer",
+                "esri/widgets/Home"
+            ],
+            function (esriConfig, Map, SceneView, FeatureLayer , Home) {
+                esriConfig.apiKey = "AAPK62fb12b1363348269786e96726cc2a240lQH93acWFPm4WYZidkX4ky_qQBRhq4SZh9ADaLE0dWHYDGpvHJcp3yBxOnj6qAn";
+
+                const quakesUrl =
+                    "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/ks_earthquakes_since_2000/FeatureServer/0";
+                const startDate = new Date("Thu Jul 25 2013 00:00:00 GMT-0700 (PDT)");
+                const endDate = new Date("Mon Nov 09 2015 00:01:40 GMT-0800 (PST)");
+
+                const quakesRenderer = {
+                    type: "simple",
+                    symbol: {
+                        type: "point-3d",
+                        symbolLayers: [{
+                            type: "object",
+                            resource: {
+                                primitive: "sphere"
+                            }
+                        }]
+                    },
+                    visualVariables: [{
+                            type: 'color',
+                            field: "date_evt",
+                            stops: [{
+                                    value: startDate.valueOf(),
+                                    color: [255, 255, 255]
+                                },
+                                {
+                                    value: endDate.valueOf(),
+                                    color: [255, 84, 54]
+                                }
+                            ]
+                        },
+                        {
+                            type: 'size',
+                            field: 'mag',
+                            axis: 'all',
+                            stops: [{
+                                    value: 2,
+                                    size: 100
+                                },
+                                {
+                                    value: 5,
+                                    size: 2000
+                                }
+                            ]
+                        }
+                    ]
+                }
+
+                const quakeTemplate = {
+                    title: '{space}',
+                    content: `<b>Date and time:</b> {date_evt}<br>
+                    <b>Magnitude (0-10): </b> {mag}<br>
+                    <b>Depth: </b> {depth} km<br>`,
+                    fieldInfos: [{
+                        fieldName: "data_evt",
+                        format: {
+                            dateFormat: "short-date-short-time"
+                        }
+                    }],
+                    actions: [{
+                        id: "find-wells",
+                        title: "Nearby wells",
+                        className: "esri-icon-notice-round"
+                    }]
+                }
+
+                const quakesDepthLayer = new FeatureLayer({
+                    url: quakesUrl,
+                    definitionExpression: "mag > 2", // 仅显示 2.0 级或更高的地震
+                    outFields: ["*"],
+                    renderer: quakesRenderer,
+                    popupTemplate: quakeTemplate,
+                    returnZ: true,
+                    elevationInfo: {
+                        mode: "relative-to-ground"
+                    }
+                })
+
+                const map = new Map({
+                    basemap: "arcgis-topographic",
+                    layers: [quakesDepthLayer],
+                    ground: {
+                        navigationConstaint: {
+                            type: 'none'
+                        },
+                        opacity: 0.8
+                    }
+                });
+
+                const view = new SceneView({
+                    container: "viewDiv",
+                    map: map,
+                    // Indicates to create a local scene
+                    viewingMode: "local",
+                    // Use the exent defined in clippingArea to define the bounds of the scene
+                    clippingArea: {
+                        xmax: -10834217,
+                        xmin: -10932882,
+                        ymax: 4493918,
+                        ymin: 4432667,
+                        spatialReference: {
+                            wkid: 3857
+                        }
+                    },
+                    camera: {
+                        position: [
+                            -98.36408160,
+                            36.42115060,
+                            26124.42603
+                        ],
+                        heading: 32.37,
+                        tilt: 78.08
+                    },
+
+                    // Turns off atmosphere and stars settings
+                    environment: {
+                        atmosphere: null,
+                        starsEnabled: false
+                    }
+                });
+
+                const homeBtn = new Home({view:view})
+
+                view.ui.add(homeBtn, "top-left")
+            });
+    </script>
+</body>
+
+</html>
