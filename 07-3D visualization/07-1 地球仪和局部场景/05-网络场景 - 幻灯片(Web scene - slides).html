@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>05-网络场景 - 幻灯片</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: aliceblue;
+        }
+
+        #createSlideDiv {
+            background-color: white;
+            opacity: 0.9;
+            color: black;
+            padding: 6px;
+        }
+
+        #slidesDiv {
+            background-color: white;
+            opacity: 0.9;
+            color: black;
+            padding: 10px;
+            visibility: hidden;
+            bottom: 20px;
+            overflow-y: auto;
+            text-align: center;
+            height: 260px;
+        }
+
+        #slidesDiv .slide {
+            /* Show cursor as pointer when on a slide */
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+
+        #slidesDiv .slide .title {
+            /* Center the title text */
+            text-align: center;
+        }
+
+        /* Draw active slide with a nice border around the thumbnail */
+
+        #slidesDiv .slide.active img {
+            box-shadow: 0px 0px 12px black;
+            border-style: solid;
+            border-width: thin;
+            border-color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <div id="createSlideDiv" class="esri-widget">
+        New slide: <input type="text" id="createSlideTitleInput" size="10" />
+        <button id="createSlideButton">Create</button>
+    </div>
+    <div id="slidesDiv" class="esri-widget"></div>
+    <script>
+        require([
+                "esri/views/SceneView",
+                "esri/WebScene",
+                "esri/webscene/Slide"
+            ],
+            function (SceneView, WebScene, Slide) {
+                const scene = new WebScene({
+                    portalItem: {
+                        id: "1c7a06421a314ac9b7d0fae22aa367fb"
+                    }
+                })
+                const view = new SceneView({
+                    map: scene,
+                    container: "viewDiv"
+                })
+                view.ui.add(["createSlideDiv", "slidesDiv"], "top-right")
+
+                function createSlideUI(slide, placement) {
+                    const slideElement = document.createElement("div")
+                    slideElement.id = slide.id
+                    slideElement.classList.add("slide")
+                    const slidesDiv = document.getElementById("slidesDiv")
+                    if (placement === "first") {
+                        slidesDiv.insertBefore(slideElement, slidesDiv.firstChild)
+                    } else {
+                        slidesDiv.appendChild(slideElement)
+                    }
+                    const title = document.createElement("div")
+                    title.innerText = slide.title.text;
+                    slideElement.appendChild(title)
+
+                    // 
+                    const img = new Image()
+                    img.src = slide.thumbnail.url
+                    img.title = slide.title.text
+                    slideElement.appendChild(img)
+
+                    slideElement.addEventListener("click", () => {
+                        const slides = document.querySelectorAll(".slide")
+                        Array.from(slides).forEach(node => {
+                            node.classList.remove("active")
+                        })
+                        slideElement.classList.add("active")
+                        slide.applyTo(view)
+                    })
+
+                }
+
+                view.when(() => {
+                    document.getElementById("slidesDiv").style.visibility = "visible"
+                    const slides = scene.presentation.slides;
+                    slides.forEach(createSlideUI);
+                    document.getElementById("createSlideButton").addEventListener("click", () => {
+                        Slide.createFrom(view).then(slide => {
+                            slide.title.text = document.getElementById("createSlideTitleInput").value
+                            scene.presentation.slides.add(slide)
+
+                            createSlideUI(slide, "first")
+                        })
+
+
+                    })
+                })
+            });
+    </script>
+</body>
+
+</html>

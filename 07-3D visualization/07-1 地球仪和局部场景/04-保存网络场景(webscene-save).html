@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保存网络场景</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: aliceblue;
+        }
+
+        #sidebarDiv {
+            width: 240px;
+            padding: 10px;
+            height: 200px;
+        }
+
+        #overlayDiv {
+            z-index: 1;
+            position: absolute;
+            margin: auto auto;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 280px;
+            height: 180px;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid grey;
+            visibility: hidden;
+        }
+
+        input[type="text"] {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <div id="sidebarDiv" class="esri-widget">
+        <h4 class="esri-heading">Save WebScene</h4>
+        <label class="esri-feature-form__label">Title</label>
+        <input id="webSceneTitle" type="text" class="esri-input" value="WebScene Saving Sample" /><br /><br />
+        <input id="saveWebScene" type="button" value="Save" disabled class="esri-button" />
+    </div>
+    <div id="overlayDiv" class="esri-widget">
+        <h4 class="esri-heading" id="head"></h4>
+        <label id="info"></label><br /><br />
+        <input type="button" value="OK" class="esri-button" />
+    </div>
+    <script>
+        require([
+                "esri/views/SceneView",
+                "esri/WebScene",
+                "esri/widgets/BasemapGallery",
+                "esri/widgets/Expand",
+            ],
+            function (SceneView, WebScene, BasemapGallery, Expand) {
+
+                const scene = new WebScene({
+                    portalItem: {
+                        id: "90e3c30bdbbe4886a94f75c2cdd7edce"
+                    }
+                })
+
+                const view = new SceneView({
+                    map: scene,
+                    container: "viewDiv"
+                })
+
+                view.ui.add([
+                    new Expand({
+                        content: new BasemapGallery({
+                            view: view
+                        }),
+                        view: view
+                    })
+                ], "top-left")
+                const saveEL = document.getElementById("saveWebScene")
+                const titleEl = document.getElementById("webSceneTitle")
+                view.when(() => {
+                    saveEL.disabled = false
+                    saveEL.addEventListener("click", () => {
+                        saveEL.disabled = true
+                        saveEL.classList.add("esri-button-secondary")
+                        const item = {
+                            title: titleEl.value
+                        }
+
+                        scene.updateFrom(view).then(() => {
+                            scene.saveAs(item).then(item => {
+                                const itemPageUrl = `${item.portal.url}/home/item.html?id=${item.id}`
+                                const link = `<a target="_blank" href="${itemPageUrl}">${title.value}</a>`
+
+                                statusMessage("Save WebScene", `<br> Successfully saved as <i>${link}</li>`)
+                            })
+                        }).catch((error) => {
+                            statusMessage("Save WebScene", "<br> Error " + error);
+                        });
+                    })
+                })
+
+                const overlay = document.getElementById("overlayDiv")
+                const ok = overlay.getElementsByTagName("input")[0]
+                const headEl = document.getElementById("head")
+                const infoEl = document.getElementById("info")
+                function statusMessage(head, info) {
+                   save.classList.remove("esri-button--secondary")
+                    save.disabled = false
+                    headEl.innerHTML = head
+                    infoEl.innerHTML = info
+                    overlay.style.visibility = "visible"
+                }
+                ok.addEventListener("click",()=>{
+                    overlay.style.visibility = "hidden"
+                })
+                view.ui.add("sidebarDiv","top-right")
+            });
+    </script>
+</body>
+
+</html>

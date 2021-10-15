@@ -17,32 +17,16 @@
             height: 100%;
             width: 100%;
         }
-
-        .esri-ui-corner .esri-component.esri-widget--panel {
-            width: 200px !important;
-        }
-
-        #relationshipResults {
-            width: 175px;
-            padding: 10px;
+        #measurements {
+            
         }
     </style>
 </head>
 
 <body>
-    <div id="viewDiv"></div>
-    <div id="relationshipResults" class="esri-widget">
-        <div><b>Spatial relationships</b></div>
-        <div id="Contains"></div>
-        <div id="Crosses"></div>
-        <div id="Disjoint"></div>
-        <div id="Equals"></div>
-        <div id="Intersects"></div>
-        <div id="Overlaps"></div>
-        <div id="Touches"></div>
-        <div id="Within"></div>
+    <div id="viewDiv">
+        <div id="measurements" class="esri-widget"></div>
     </div>
-
     <script>
         require([
             "esri/config",

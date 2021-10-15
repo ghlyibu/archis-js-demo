@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三维测量</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #topbar {
+            background: #fff;
+            padding: 10px;
+        }
+
+        .action-button {
+            font-size: 16px;
+            background-color: transparent;
+            border: 1px solid #d3d3d3;
+            color: #6e6e66;
+            height: 32px;
+            width: 32px;
+            text-align: center;
+            box-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-button:hover,
+        .action-button:focus {
+            background: #0079c1;
+            color: #e4e4e4;
+        }
+
+        .active {
+            background: #0079c1;
+            color: #e4e4e4;
+        }
+    </style>
+
+</head>
+
+<body>
+    <script>
+        require([
+            "esri/WebScene",
+            "esri/views/SceneView",
+            "esri/widgets/DirectLineMeasurement3D",
+            "esri/widgets/AreaMeasurement3D",
+            "esri/core/promiseUtils",
+            "esri/widgets/Slice"
+        ], (WebScene, SceneView, DirectLineMeasurement3D, AreaMeasurement3D, promiseUtils,Slice) => {
+            let activeWidget = null
+
+            // 埃菲尔铁塔3d场景
+            const webscene = new WebScene({
+                portalItem: {
+                    id: "b6c889ff1f684cd7a65301984b80b93d"
+                }
+            })
+
+            const view = new SceneView({
+                container: "viewDiv",
+                map: webscene
+            })
+
+            view.ui.add("topbar","top-right")
+            const areaButton = document.getElementById("areaButton")
+            const distanceButton = document.getElementById("distanceButton")
+            areaButton.addEventListener("click",()=>{
+                setActiveWidget(null)
+                if(!event.target.classList.contains('active')){
+                    setActiveWidget("area")
+                } else {
+                    setActiveButton(null)
+                }
+            })
+            distanceButton.addEventListener('click',()=>{
+                setActiveWidget(null)
+                if(!event.target.classList.contains('active')){
+                    setActiveWidget("distance")
+                } else {
+                    setActiveButton(null)
+                }
+            })
+
+            // 设置当前使用的测绘工具 长度还是面积
+            function setActiveWidget(type) {
+                switch(type){
+                    case "distance":
+                        activeWidget = new DirectLineMeasurement3D({
+                            view:view
+                        })
+                        activeWidget.viewModel.start().catch(error => {
+                            if(promiseUtils.isAbortError(error)){
+                                return
+                            }
+                            throw error
+                        })
+                        setActiveButton(distanceButton)
+                        break;
+                    case "area":
+                        activeWidget = new AreaMeasurement3D({
+                            view: view
+                        })
+                        activeWidget.viewModel.start().catch(error => {
+                            if(promiseUtils.isAbortError) {
+                                return;
+                            }
+                            throw error
+                        })
+                        view.ui.add(activeWidget,"top-right")
+                        setActiveButton(areaButton)
+                        break;
+                    case null:
+                        if(activeWidget){
+                            view.ui.remove(activeWidget)
+                            activeWidget.destroy()
+                            activeWidget = null
+                        } 
+                        break
+                }
+            }
+
+            function setActiveButton(selectedButton){
+                view.focus()
+                const elements = document.getElementsByClassName("active")
+                for(let i = 0;i < elements.length;i++){
+                    elements[i].classList.remove("active")
+                }
+                if(selectedButton){
+                    selectedButton.classList.add("active")
+                }
+            }
+
+            const slice = new Slice({
+                view: view
+            })
+            view.ui.add(slice, {
+                position: "bottom-left"
+            })
+        })
+    </script>
+
+    <div id="viewDiv"></div>
+    <div id="topbar">
+        <button class="action-button esri-icon-measure-line" id="distanceButton" type="button" title="Measure distance between two points"></button>
+        <button class="action-button esri-icon-measure-area" id="areaButton" type="button" title="Measure area"></button>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保存网络场景</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #optionsDiv {
+            position: absolute;
+            bottom: 17px;
+            width: 100%;
+            padding: 20px 0;
+            z-index: 1;
+            text-align: center;
+        }
+
+        button {
+            background: white;
+            padding: 7px;
+            border: 1px solid #005e95;
+            font-size: 0.9em;
+            margin: 5px;
+            color: #005e95;
+        }
+
+        button:hover {
+            background: #005e95;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="optionsDiv">
+        <button id="default">Default flight</button>
+        <button id="linearSlow">Linear slow flight</button>
+        <button id="linearFast">Linear fast flight</button>
+        <button id="expoIncrease">Exponentially increasing speed flight</button>
+        <button id="fixedDuration">10 seconds flight</button>
+        <button id="bounceBerlin">Bounce to Berlin</button>
+    </div>
+    <div id="viewDiv"></div>
+    <div id="slidesDiv" class="esri-widget"></div>
+    <script>
+        require([
+                "esri/Map",
+                "esri/views/SceneView"
+            ],
+            function (Map, SceneView) {
+                function addClickListener(Id, fn) {
+                    document.getElementById(Id).addEventListener("click", fn)
+                }
+
+                const map = new Map({
+                    basemap: 'dark-gray-vector'
+                })
+                const view = new SceneView({
+                    container: "viewDiv",
+                    map: map,
+                    zoom: 4
+                })
+
+                function shiftCamera(deg) {
+                    const camera = view.camera.clone()
+                    camera.position.longitude += deg
+                    return camera
+                }
+
+                function catchAbortError(error) {
+                    if (error.name !== "AbortError") {
+                        console.log(error)
+                    }
+                }
+
+                addClickListener("default", () => {
+                    view.goTo(shiftCamera(60)).catch(catchAbortError)
+                })
+                addClickListener("linearSlow", () => {
+                    view.goTo(shiftCamera(60), {
+                        speedFactor: 0.1, // 
+                        easing: "linear"
+                    }).catch(catchAbortError)
+                })
+
+                addClickListener("linearFast", () => {
+                    view.goTo(shiftCamera(60), {
+                        speedFactor: 6,
+                        easing: "linear"
+                    }).catch(catchAbortError)
+                })
+
+                addClickListener("expoIncrease", () => {
+                    view.goTo(shiftCamera(60), {
+                        duration: 4000,
+                        easing: "in-expo"
+                    }).catch(catchAbortError)
+                })
+
+                addClickListener("fixedDuration", () => {
+                    view.goTo(shiftCamera(60), {
+                        duration: 10000,
+                        maxDuration: 10000
+                    }).catch(catchAbortError)
+                })
+
+                addClickListener("bounceBerlin", () => {
+                    view.goTo({
+                        position: {
+                            x: 13.4,
+                            y: 52.52,
+                            z: 700000,
+                            spatialReference: {
+                                wkid: 4326
+                            }
+                        },
+                        heading: 0,
+                        tilt: 0
+                    }, {
+                        speedFactor: 0.3,
+                        easing: customEasing
+                    }).catch(catchAbortError)
+                })
+
+                function customEasing(t) {
+                    return (
+                        1 -
+                        Math.abs(Math.sin(-1.7 + t * 4.5 * Math.PI)) * Math.pow(0.5, t * 10)
+                    );
+                }
+
+            });
+    </script>
+</body>
+
+</html>
